@@ -5,6 +5,7 @@ import {signinValidator, signinValidatorArr} from "../middlewares/signinValidato
 const router = express.Router();
 
 router.post("/api/users/signin", ...signinValidatorArr, (req: Request, res: Response) => {
+    throw new Error("onder")
     res.send({message: "hi there"})
 })
 
