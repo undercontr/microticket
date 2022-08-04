@@ -1,15 +1,33 @@
 import express from "express"
-import type { Express, Response, Request } from "express"
-import { json } from "body-parser"
+import "express-async-errors"
+import mongoose from "mongoose";
+
+import type { Express } from "express"
 import routes from "./routes";
 import { errorHandler } from "./middlewares/error-handler";
+import { NotFoundError } from "./errors/not-found-error";
 
 const app: Express = express();
-app.use(json());
+app.use(express.json());
 app.use(...routes)
+
+app.all("*", async () => {
+    throw new NotFoundError()
+})
 
 app.use(errorHandler)
 
-app.listen(3000, () => {
-    console.log("Listening on port 3000")
-})
+const start = async () => {
+    try {
+        const db = await mongoose.connect("mongodb://auth-mongo-srv:27017/auth")
+    
+    } catch (error) {
+        console.log(error)
+    }
+
+    app.listen(3000, () => {
+        console.log("Listening on port 3000")
+    })
+}
+
+start()
