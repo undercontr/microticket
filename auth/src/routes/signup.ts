@@ -5,18 +5,16 @@ import { DatabaseConnectionError } from "../errors/database-connection-error";
 import { User } from "../models/user";
 import { BadRequestError } from "../errors/bad-request-error";
 
+import jwt from "jsonwebtoken"
+import { validateRequest } from "../middlewares/validate-request";
+
 const router = express.Router();
 
 router.post("/api/users/signup",
     body("email").isEmail().withMessage("Please enter a valid email address"),
     body("password").trim().isLength({ min: 4, max: 20 }).withMessage("Please enter the password in right structure"),
+    validateRequest,
     async (req: Request, res: Response) => {
-        const errors = validationResult(req);
-
-        if (!errors.isEmpty()) {
-            throw new RequestValidationError(errors.array())
-        }  
-
         const {email, password} = req.body;
 
         const existingUser = await User.findOne({email})
@@ -28,7 +26,12 @@ router.post("/api/users/signup",
         const user = User.build({email, password})
         await user.save();
 
-        return res.send({message: "User saved", user})
+        const userJwt = jwt.sign({id: user.id, email: user.email}, process.env.JWT_KEY!);
+        req.session = {
+            jwt: userJwt
+        }
+
+        return res.send(user)
     })
 
 export { router as signupRouter }

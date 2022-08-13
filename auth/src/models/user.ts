@@ -17,10 +17,19 @@ interface UserDoc extends Document {
 
 const userSchema = new Schema({
     email: { type: String, required: true },
-    password: { type: String, required: true }
+    password: { type: String, required: true },
 })
 
-userSchema.pre("save", async function(next) {
+userSchema.set("toJSON", {
+    transform(doc, ret, options) {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.password;
+    },
+    versionKey: false
+})
+
+userSchema.pre("save", async function (next) {
     if (this.isModified("password")) {
         const hashed = await Password.toHash(this.get("password"))
         this.set("password", hashed)
